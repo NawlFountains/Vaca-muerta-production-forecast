@@ -23,11 +23,31 @@ automatically.
   for top producing deposits
 - 12-month production forecast for top producing deposits
 
+## Results
+
+### Arps Decline Curve — Estación Fernández Oro
+![Arps Decline Curve](assets/arps_estacion_fernandez_oro.png)
+
+### Prophet Forecast — Loma Campana  
+![Prophet Forecast](assets/prophet_loma_campana.png)
+
+### Underperformance Detection — Sierras Blancas
+![Underperformance Detection](assets/underperforming_sierras_blancas.png)
+
+### Model Comparison
+| Deposit | Arps MAPE | Prophet MAPE | Winner |
+|---|---|---|---|
+| Loma Campana | 84.3% | 26.9% | Prophet |
+| Estación Fernández Oro | 3.0% | 27.3% | Arps |
+| Cruz de Lorena | N/A | 129.4% | — |
+| Sierras Blancas | N/A | 51.1% | Prophet |
+
+
 ## Roadmap
 - [x] Prophet time series forecasting
 - [x] Baseline vs ML comparison (Arps vs Prophet)
 - [x] Evaluation metrics (RMSE, MAE)
-- [ ] Underperformance detection and flagging system
+- [x] Underperformance detection and flagging system
 
 ## Stack
 - Python, Pandas, NumPy
