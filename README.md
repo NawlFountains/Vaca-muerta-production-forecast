@@ -10,6 +10,9 @@ Analyze unconventional oil and gas production across deposits in the Neuquén
 basin, forecast future production, and automatically flag underperforming wells 
 by comparing actual production against model expectations.
 
+## Demo
+[Live now](https://vaca-muerta-underperformance-forecast.streamlit.app/)
+
 ## Business Use Case
 In O&G operations, identifying underperforming wells early allows operators to 
 intervene before significant production losses occur. This project builds a 
