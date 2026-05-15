@@ -24,9 +24,9 @@ automatically.
 - 12-month production forecast for top producing deposits
 
 ## Roadmap
-- [ ] Prophet time series forecasting
-- [ ] Baseline vs ML comparison (Arps vs Prophet)
-- [ ] Evaluation metrics (RMSE, MAE)
+- [x] Prophet time series forecasting
+- [x] Baseline vs ML comparison (Arps vs Prophet)
+- [x] Evaluation metrics (RMSE, MAE)
 - [ ] Underperformance detection and flagging system
 
 ## Stack
