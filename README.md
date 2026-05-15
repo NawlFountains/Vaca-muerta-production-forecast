@@ -42,18 +42,23 @@ automatically.
 | Cruz de Lorena | N/A | 129.4% | — |
 | Sierras Blancas | N/A | 51.1% | Prophet |
 
+> **N/A:** Arps decline curve fitting requires a clear hyperbolic or exponential
+> decline trend. Cruz de Lorena and Sierras Blancas show irregular or
+> early-stage production patterns that don't meet this condition,
+> making Arps fitting unreliable for these deposits.
 
 ## Roadmap
 - [x] Prophet time series forecasting
 - [x] Baseline vs ML comparison (Arps vs Prophet)
 - [x] Evaluation metrics (RMSE, MAE)
 - [x] Underperformance detection and flagging system
+- [ ] Live demo using Streamlit for interacting with different deposits
 
 ## Stack
 - Python, Pandas, NumPy
 - Plotly, Matplotlib
 - Scipy (curve fitting)
-- Prophet, PyTorch (coming)
+- Prophet
 
 ## Data Source
 [datos.energia.gob.ar](http://datos.energia.gob.ar)
