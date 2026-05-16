@@ -11,7 +11,10 @@ basin, forecast future production, and automatically flag underperforming wells
 by comparing actual production against model expectations.
 
 ## Demo
-[Live now](https://vaca-muerta-underperformance-forecast.streamlit.app/)
+
+[**Try the live app**](https://vaca-muerta-underperformance-forecast.streamlit.app/)
+
+![Vaca Muerta demo](assets/demo.gif)
 
 ## Business Use Case
 In O&G operations, identifying underperforming wells early allows operators to 
@@ -19,12 +22,13 @@ intervene before significant production losses occur. This project builds a
 data-driven baseline of expected production per well and flags anomalies 
 automatically.
 
-## Current State
-- Exploratory analysis: well locations, production by company,
-  deposit comparisons, water cut trends
-- Arps decline curve fitting (hyperbolic + exponential)
-  for top producing deposits
-- 12-month production forecast for top producing deposits
+
+## What was built
+- Exploratory data analysis: well locations, production by company, deposit comparisons and water cut trends
+- Arps decline curve fitting (hyperbolic + exponential) for top producing deposits
+- Prophet time series forecasting with train/test evaluation
+- Underperformance detection combining production threshold and rising water cut signals
+- Interactive Streamlit dashboard with deposit selector and MAPE metric cards
 
 ## Results
 
@@ -55,7 +59,7 @@ automatically.
 - [x] Baseline vs ML comparison (Arps vs Prophet)
 - [x] Evaluation metrics (RMSE, MAE)
 - [x] Underperformance detection and flagging system
-- [ ] Live demo using Streamlit for interacting with different deposits
+- [x] Live demo using Streamlit for interacting with different deposits
 
 ## Stack
 - Python, Pandas, NumPy
