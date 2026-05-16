@@ -5,15 +5,25 @@ import plotly.graph_objects as go
 
 st.title("Vaca Muerta Forecast and Underperforming deposit detection")
 
-df = pd.read_csv("data/company_production.csv")
 
-df_forecast_arps = pd.read_csv("data/forecast_arps.csv")
+# Load forecasting data precomputed
+df_arps = pd.read_csv("data/forecast_arps.csv")
 df_forecast_ph = pd.read_csv("data/forecast_prophet.csv")
 df_underperformance = pd.read_csv("data/underperformance.csv")
 
-def plot_forecast_arps(df_forecast):
-    for deposit in df_forecast['deposit'].unique():
-        d_dep = df_forecast_arps[df_forecast_arps['deposit']  == deposit]
+# Load metrics
+df_mape_arps = pd.read_csv("data/arps_mapes.csv")
+df_mape_ph = pd.read_csv("data/prophet_mapes.csv")
+
+
+def plot_arps(df_arps, df_mape, deposit):
+    if deposit in df_arps['deposit'].unique():
+        d_dep = df_arps[df_arps['deposit']  == deposit]
+        mape_value =  df_mape[df_mape['deposit'] == deposit]['mape'].values[0]
+        
+        st.metric("Arps MAPE",f"{mape_value}")
+        if mape_value > 50:
+            st.caption("High MAPE — Arps works best for deposits in clear decline phase")
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=d_dep['ds'], y=d_dep['actual'], name='Actual', mode='markers'))
@@ -21,11 +31,15 @@ def plot_forecast_arps(df_forecast):
         fig.update_layout(title=f"{deposit}", 
                         yaxis_title="Production (m³)", xaxis_title="Date")
         st.plotly_chart(fig, width='stretch')
+    else:
+        st.caption("Deposit not mature enough")
 
-def plot_forecast_prophet(df_forecast):
-    for deposit in df_forecast['deposit'].unique():
+def plot_forecast_prophet(df_forecast, df_mape, deposit):
+    if deposit in df_forecast['deposit'].unique():
         d_dep = df_forecast[df_forecast['deposit'] == deposit]
+        mape_value =  df_mape[df_mape['deposit'] == deposit]['mape'].values[0]
 
+        st.metric("Prophet MAPE",f"{mape_value}")
         TRAIN_CUTOFF = '2024-12-31' # Defined in the notebook and script
 
         hist_forecast   = d_dep[d_dep['ds'] <= TRAIN_CUTOFF]
@@ -68,7 +82,7 @@ def plot_forecast_prophet(df_forecast):
         )
         st.plotly_chart(fig, width='stretch')
 
-def plot_underperformance_detection(df_underperformance):
+def plot_underperformance_detection(df_underperformance, deposit):
     # Underperformance Detection
     PROD_THRESHOLD = 0.80      # 20% below forecast
     CONSEC_MONTHS  = 3         # 3 consecutive months
@@ -76,7 +90,7 @@ def plot_underperformance_detection(df_underperformance):
 
     results_flags = []
 
-    for deposit in df_underperformance['deposit'].unique():
+    if deposit in df_underperformance['deposit'].unique():
         df_eval = df_underperformance[df_underperformance['deposit'] == deposit]
         
         # Signal 1: production below threshold
@@ -144,14 +158,14 @@ def plot_underperformance_detection(df_underperformance):
         )
         st.plotly_chart(fig, width='stretch')
         
-    
+deposit = st.selectbox('Select a deposit to showcase', df_underperformance['deposit'].unique() ,index=0)
 
-st.subheader('Arp declining curves')
-plot_forecast_arps(df_forecast_arps)
+st.subheader('Arp Decline Curve')
+plot_arps(df_arps, df_mape_arps, deposit)
 
 
 st.subheader('Prophet forecast')
-plot_forecast_prophet(df_forecast_ph)
+plot_forecast_prophet(df_forecast_ph, df_mape_ph, deposit)
 
 st.subheader('Underperforming well detection')
-plot_underperformance_detection(df_underperformance)
+plot_underperformance_detection(df_underperformance, deposit)
