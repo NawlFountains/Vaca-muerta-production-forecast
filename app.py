@@ -3,8 +3,20 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
+COLORS = {
+    'Oil':   '#D2691E',
+    'Gas':   '#E63946',
+    'Water': '#1E90FF'
+}
+
+MARKER_SIZE = 6
+
+INITIAL_DEPOSIT = "ESTACION FERNANDEZ ORO"
+
 st.title("Vaca Muerta Forecast and Underperforming deposit detection")
 
+
+df_basin_production = pd.read_csv("data/basin_monthly.csv")
 
 # Load forecasting data precomputed
 df_arps = pd.read_csv("data/forecast_arps.csv")
@@ -15,6 +27,27 @@ df_underperformance = pd.read_csv("data/underperformance.csv")
 df_mape_arps = pd.read_csv("data/arps_mapes.csv")
 df_mape_ph = pd.read_csv("data/prophet_mapes.csv")
 
+
+def plot_deposit_production(df_production, deposit):
+    d_dep = df_production[df_production['areayacimiento'] == deposit]
+
+    # Filtering zero values for plotting purposes
+    THRESHOLD = 0.01
+    oil_prod = d_dep[d_dep['prod_pet'] > THRESHOLD]
+    gas_prod = d_dep[d_dep['prod_gas'] > THRESHOLD]
+    water_prod = d_dep[d_dep['prod_agua'] > THRESHOLD]
+
+    fig = go.Figure()
+    
+    fig.add_trace(go.Scatter(x=oil_prod['date'], y=oil_prod['prod_pet'], name = 'Oil', mode='markers', marker=dict(color=COLORS['Oil'], size=MARKER_SIZE)))
+    fig.add_trace(go.Scatter(x=gas_prod['date'], y=gas_prod['prod_gas'], name = 'Gas', mode='markers', marker=dict(color=COLORS['Gas'], size=MARKER_SIZE)))
+    fig.add_trace(go.Scatter(x=water_prod['date'], y=water_prod['prod_agua'], name = 'Water', mode='markers', marker=dict(color=COLORS['Water'], size=MARKER_SIZE)))
+
+    fig.update_layout(title=f"{deposit}", yaxis_title = "Production (m³)", xaxis_title = "Date")
+    st.plotly_chart(fig, width='stretch')
+
+
+     
 
 def plot_arps(df_arps, df_mape, deposit):
     if deposit in df_arps['deposit'].unique():
@@ -157,8 +190,13 @@ def plot_underperformance_detection(df_underperformance, deposit):
             xaxis_title="Date"
         )
         st.plotly_chart(fig, width='stretch')
-        
-deposit = st.selectbox('Select a deposit to showcase', df_underperformance['deposit'].unique() ,index=0)
+
+
+historical_prod_deposit = st.selectbox('Select a deposit to see historical production', df_basin_production['areayacimiento'].unique(), index = df_basin_production['areayacimiento'].unique().tolist().index(INITIAL_DEPOSIT))
+st.subheader('Historical production')
+plot_deposit_production(df_basin_production,historical_prod_deposit)
+
+deposit = st.selectbox('Select a deposit to showcase prediction models', df_underperformance['deposit'].unique() ,index=df_underperformance['deposit'].unique().tolist().index(INITIAL_DEPOSIT))
 
 st.subheader('Arp Decline Curve')
 plot_arps(df_arps, df_mape_arps, deposit)
