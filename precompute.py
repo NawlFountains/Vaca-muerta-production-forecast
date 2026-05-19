@@ -40,6 +40,16 @@ df_neuquina = df[df["cuenca"] == "NEUQUINA"]
 print(f"Filtered to {len(df_neuquina):,} Neuquina rows.")
  
  
+ # df_deposits_locations
+df_deposit_locations = df_neuquina[['coordenaday','coordenadax','idpozo','areayacimiento']]
+df_deposit_locations = df_deposit_locations.groupby('areayacimiento').agg(
+    lat=('coordenaday', 'mean'),
+    lon=('coordenadax', 'mean')
+).reset_index()
+df_deposit_locations.rename(columns={'areayacimiento':'deposit'}, inplace=True)
+
+df_deposit_locations.to_csv("data/deposit_locations.csv", index = False)
+
 # ── df_monthly_prod — mirror notebook cells 42 & 44 ───────────────────────────
 df_monthly_prod = df_neuquina[["anio", "mes", "areayacimiento", "prod_pet", "prod_gas", "prod_agua"]]
 df_monthly_prod = df_monthly_prod.groupby(["anio", "mes", "areayacimiento"]).agg(

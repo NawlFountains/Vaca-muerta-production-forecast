@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 COLORS = {
     'Oil':   '#D2691E',
@@ -17,6 +18,7 @@ st.title("Vaca Muerta Forecast and Underperforming deposit detection")
 
 
 df_basin_production = pd.read_csv("data/basin_monthly.csv")
+df_deposit_locations = pd.read_csv("data/deposit_locations.csv")
 
 # Load forecasting data precomputed
 df_arps = pd.read_csv("data/forecast_arps.csv")
@@ -43,7 +45,7 @@ def plot_deposit_production(df_production, deposit):
     fig.add_trace(go.Scatter(x=gas_prod['date'], y=gas_prod['prod_gas'], name = 'Gas', mode='markers', marker=dict(color=COLORS['Gas'], size=MARKER_SIZE)))
     fig.add_trace(go.Scatter(x=water_prod['date'], y=water_prod['prod_agua'], name = 'Water', mode='markers', marker=dict(color=COLORS['Water'], size=MARKER_SIZE)))
 
-    fig.update_layout(title=f"{deposit}", yaxis_title = "Production (m³)", xaxis_title = "Date")
+    fig.update_layout(title=f"{deposit} - Production History", yaxis_title = "Production (m³)", xaxis_title = "Date")
     st.plotly_chart(fig, width='stretch')
 
 
@@ -61,7 +63,7 @@ def plot_arps(df_arps, df_mape, deposit):
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=d_dep['ds'], y=d_dep['actual'], name='Actual', mode='markers'))
         fig.add_trace(go.Scatter(x=d_dep['ds'], y=d_dep['yhat'], name='Hyperbolic fit'))
-        fig.update_layout(title=f"{deposit}", 
+        fig.update_layout(title=f"{deposit} - Arps Decline Curve", 
                         yaxis_title="Production (m³)", xaxis_title="Date")
         st.plotly_chart(fig, width='stretch')
     else:
@@ -109,7 +111,7 @@ def plot_forecast_prophet(df_forecast, df_mape, deposit):
             annotation_position='top right'
         )
         fig.update_layout(
-            title=f"{deposit}",
+            title=f"{deposit} - Prophet Forecast",
             yaxis_title="Production (m³)",
             xaxis_title="Date"
         )
@@ -191,12 +193,73 @@ def plot_underperformance_detection(df_underperformance, deposit):
         )
         st.plotly_chart(fig, width='stretch')
 
+if 'selected_deposit' not in st.session_state:
+    st.session_state.selected_deposit = INITIAL_DEPOSIT
 
-historical_prod_deposit = st.selectbox('Select a deposit to see historical production', df_basin_production['areayacimiento'].unique(), index = df_basin_production['areayacimiento'].unique().tolist().index(INITIAL_DEPOSIT))
-st.subheader('Historical production')
-plot_deposit_production(df_basin_production,historical_prod_deposit)
+def plot_deposit_locations(df_locations):
+
+    totals = df_basin_production.groupby('areayacimiento').agg(
+        total_pet=('prod_pet', 'sum'),
+        total_gas=('prod_gas', 'sum'),
+        total_agua=('prod_agua', 'sum')
+    ).reset_index()
+
+    totals.columns = ['deposit', 'total_pet', 'total_gas', 'total_agua']
+
+    # dominant resource
+    totals['dominant'] = totals[['total_pet', 'total_gas', 'total_agua']].idxmax(axis=1).map({
+        'total_pet': 'Oil',
+        'total_gas': 'Gas',
+        'total_agua': 'Water'
+    })
+
+    # total production
+    totals['total_prod'] = totals['total_pet'] + totals['total_gas'] + totals['total_agua']
+
+    # Normalization because of scale differences
+    totals['size'] = np.log1p(totals['total_prod'])
+    totals['size'] = (totals['size'] - totals['size'].min()) / (totals['size'].max() - totals['size'].min()) * 20 + 5  # range 5-25
+
+
+    df_locations = df_locations.merge(totals, on='deposit', how='left')
+
+    
+    # Either select on the map or search by name
+    deposits = df_locations['deposit'].tolist()
+
+    fig = px.scatter_map(
+        df_locations,
+        lat='lat',
+        lon='lon',
+        hover_name='deposit',
+        size='size',
+        size_max=20,
+        color='dominant',
+        color_discrete_map=COLORS,
+        hover_data={'lat': False, 'lon': False, 'size': False},
+        zoom=8,
+        map_style='carto-darkmatter'
+    )
+
+    event = st.plotly_chart(fig, on_select='rerun', width='stretch')
+
+    # Detect selection
+    if event.selection.points:
+        st.session_state.selected_deposit = event.selection.points[0]['hovertext']
+
+    search = st.selectbox(
+        'Search by name',
+        options=deposits,
+        index=deposits.index(st.session_state.selected_deposit)
+    )
+    st.session_state.selected_deposit = search
+
+st.text('Select a deposit to view their historical production, bubble sized related to production output')
+plot_deposit_locations(df_deposit_locations)
+plot_deposit_production(df_basin_production, st.session_state.selected_deposit)
 
 deposit = st.selectbox('Select a deposit to showcase prediction models', df_underperformance['deposit'].unique() ,index=df_underperformance['deposit'].unique().tolist().index(INITIAL_DEPOSIT))
+
 
 st.subheader('Arp Decline Curve')
 plot_arps(df_arps, df_mape_arps, deposit)
